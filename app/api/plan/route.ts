@@ -15,58 +15,30 @@ const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 interface Task {
   title: string;
   description: string;
-  subtasks: string[];
-  priority: 'high' | 'medium' | 'low';
 }
 
 // Fallback mock implementation of task generation
 function generateMockPlan(goal: string) {
-  const priorities: ('high' | 'medium' | 'low')[] = ['high', 'medium', 'low'];
-  const taskTemplates: Omit<Task, 'priority'>[] = [
+  const taskTemplates: Task[] = [
     {
       title: 'Research and Planning',
-      description: 'Gather information and plan the approach',
-      subtasks: [
-        'Identify key requirements',
-        'Research best practices',
-        'Create initial outline'
-      ]
+      description: 'Gather information and plan the approach'
     },
     {
       title: 'Initial Setup',
-      description: 'Set up the basic structure and environment',
-      subtasks: [
-        'Install necessary tools',
-        'Configure development environment',
-        'Set up version control'
-      ]
+      description: 'Set up the basic structure and environment'
     },
     {
       title: 'Core Implementation',
-      description: 'Implement the main functionality',
-      subtasks: [
-        'Develop core features',
-        'Write unit tests',
-        'Implement error handling'
-      ]
+      description: 'Implement the main functionality'
     },
     {
       title: 'Testing and Refinement',
-      description: 'Test the implementation and make improvements',
-      subtasks: [
-        'Perform integration testing',
-        'Gather feedback',
-        'Refine based on feedback'
-      ]
+      description: 'Test the implementation and make improvements'
     },
     {
       title: 'Deployment',
-      description: 'Prepare and deploy the solution',
-      subtasks: [
-        'Prepare deployment package',
-        'Deploy to production',
-        'Monitor after deployment'
-      ]
+      description: 'Prepare and deploy the solution'
     }
   ];
 
@@ -79,11 +51,7 @@ function generateMockPlan(goal: string) {
     const randomIndex = Math.floor(Math.random() * taskTemplates.length);
     if (!usedIndices.has(randomIndex)) {
       usedIndices.add(randomIndex);
-      const task: Task = {
-        ...taskTemplates[randomIndex],
-        priority: priorities[Math.floor(Math.random() * priorities.length)]
-      };
-      selectedTasks.push(task);
+      selectedTasks.push(taskTemplates[randomIndex]);
     }
   }
 
@@ -114,25 +82,24 @@ export async function POST(req: Request) {
     try {
       // Try to generate plan using Gemini 2.0 Flash
       const prompt = `You are a helpful assistant that breaks down goals into actionable steps. 
-      For the given goal, create a detailed plan with tasks and subtasks. 
+      For the given goal, create a detailed plan with tasks. 
       Return the response as a valid JSON object with this structure: 
       {
         "title": "Goal title",
         "description": "Brief description of the goal",
-        "timeline": "Estimated timeline",
         "tasks": [
           {
             "title": "Task title",
             "description": "Task description",
-            "subtasks": ["subtask 1", "subtask 2"],
-            "priority": "high/medium/low"
+            "emoji": "Task emoji",
           }
         ]
       }
       
       Goal: ${goal}
       
-      Please ensure the response is a valid JSON object with no extra text before or after.`;
+      Please ensure the response is a valid JSON object with no extra text before or after. 
+      The task description needs to be detailed.`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
